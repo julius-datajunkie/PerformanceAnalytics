@@ -1,4 +1,5 @@
-import statsmodel
+import pandas as pd
+import numpy as np
 
 
 def cumulative(R, geometric=True):
@@ -26,20 +27,34 @@ def excess(R, Rf=0):
 
 def Geltner(R):
     """
-    Calculates returns by removing estimating or liquidity bias in real estate index returns
-    It has since been appleid with success to other return series that show autocorrelation or illiquidity
+    Calculates returns by removing estimating or liquidity bias in
+    real estate index returns. It has since been applied with success
+    to other return series that show autocorrelation or illiquidity.
     """
     pass
 
 
 def rebalancing(R, weights):
     """
-    Calculates weighted returns for a portfolio of assets. This function is used
-    when you have a portfolio that is periodically rebalanced, and multiple time
-    periods with different weights. This function will subset the return series to
-    only include returns for assets for which weight is provided.
+    Calculates weighted returns for a portfolio of assets.
+    This function is used when you have a portfolio that is periodically
+    rebalanced, and multiple time periods with different weights.
+    This function will subset the return series to only include returns
+    for assets for which weight is provided.
     R: pandas dataframe/timeseries of asset returns
-    weights:
+    weights: pandas timeseries of portfolio weights specifying
+    rebalancing weights at different times.
     """
-
-
+    weights_df = pd.DataFrame(weights)
+    num_assets = len(weights_df.columns)
+    # weights may have shorter length resulting in NA values
+    weights_df = weights_df.reindex(R.index, method="ffill").dropna()
+    #re-align return series to match the weights
+    R = R.reindex(weights_df.index).ix[:, :num_assets]
+    dot_product = R.dot(weights_df.T)
+    portfolio_return = pd.DataFrame(
+        np.diagonal(dot_product), index=dot_product.index,
+        columns=['portfolio_returns']
+    )
+    portfolio_return.index.name = 'Date'
+    return portfolio_return
