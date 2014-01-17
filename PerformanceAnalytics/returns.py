@@ -1,5 +1,7 @@
 import pandas as pd
 import numpy as np
+import math
+import utils
 
 
 def cumulative(R, geometric=True):
@@ -58,3 +60,15 @@ def rebalancing(R, weights):
     )
     portfolio_return.index.name = 'Date'
     return portfolio_return
+
+
+def annualized(R, scale=None, geometric=True):
+    n = len(R)
+    result = 0
+    if scale is None:
+        scale = utils.periodicity(R).scale
+    if geometric:
+        result = math.pow((1 + R).prod(), scale / n) - 1
+    else:
+        result = R.mean() * scale
+    return result

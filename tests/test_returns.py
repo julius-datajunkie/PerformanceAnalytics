@@ -3,11 +3,7 @@ import pandas as pd
 
 
 class TestReturns:
-    def test_rebalancing(self):
-        weights = pd.read_csv("weights.csv", parse_dates=[0])
-        edhec = pd.read_csv("edhec.csv", parse_dates=[0])
-        edhec.index = edhec.ix[:, 0]
-        weights.index = weights.ix[:, 0]
-        weights = weights.ix[:, 1:]
-        edhec = edhec.ix[:, 1:]
-        assert len(returns.rebalancing(edhec, weights)) == 116
+    def test_annualized(self):
+        dates = pd.date_range("1/1/2010", periods=12, freq="M")
+        df = pd.DataFrame([0.1 for i in range(12)], index=dates)
+        assert abs(returns.annualized(df) - 2.138428) < 0.0001
