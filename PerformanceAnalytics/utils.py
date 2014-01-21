@@ -34,3 +34,10 @@ def periodicity(df):
         freq.label = "A"
         freq.scale = 1
     return freq
+
+def set_alpha_prob(p):
+    if p >= 0.51:
+        alpha = 1 - p
+    else:
+        alpha = p
+    return alpha
