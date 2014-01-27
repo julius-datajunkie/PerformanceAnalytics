@@ -1,4 +1,6 @@
 import numpy as np
+import returns
+import math
 from frequency import Frequency
 
 
@@ -41,3 +43,40 @@ def set_alpha_prob(p):
     else:
         alpha = p
     return alpha
+
+def centered_moment(R, power):
+    return returns.centered(R).pow(power).mean()
+
+def M3_MM(R, mu=None):
+    """
+    http://www.quantatrisk.com/2013/01/20/coskewness-and-cokurtosis/
+    Assume equal weighted assets in the portfolio
+    """
+    cAssets = len(R.columns)
+    T = len(R)
+    if mu is None:
+        mu = R.mean()
+    M3 = np.zeros((cAssets, cAssets**2))
+    z = R - R.mean()
+    for i in range(T):
+        row = z.ix[i,:]
+        row.shape = (cAssets, 1)
+        M3 = M3 + np.kron(np.outer(row, row.T), row.T)
+    return 1.0/T * M3
+
+def M4_MM(R, mu=None):
+    """
+    http://www.quantatrisk.com/2013/01/20/coskewness-and-cokurtosis/
+    Assume equal weighted assets in the portfolio
+    """
+    cAssets = len(R.columns)
+    T = len(R)
+    if mu is None:
+        mu = R.mean()
+    M4 = np.zeros((cAssets, cAssets**3))
+    z = R - R.mean()
+    for i in range(T):
+        row = z.ix[i,:]
+        row.shape = (cAssets, 1)
+        M4 = M4 + np.kron(np.kron(np.outer(row, row.T), row.T), row.T)
+    return 1.0/T * M4
