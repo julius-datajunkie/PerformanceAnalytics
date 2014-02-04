@@ -3,6 +3,16 @@ import numpy as np
 import math
 import utils
 
+def annualized(R, scale=None, geometric=True):
+    n = len(R)
+    result = 0
+    if scale is None:
+        scale = utils.periodicity(R).scale
+    if geometric:
+        result = math.pow((1 + R).prod(), scale / n) - 1
+    else:
+        result = R.mean() * scale
+    return result
 
 def cumulative(R, geometric=True):
     """
@@ -16,7 +26,17 @@ def cumulative(R, geometric=True):
     else:
         return (1 + R).prod() - 1
 
-
+def calculate(price, method="discrete"):
+    """
+    
+    """
+    if method == "simple" or method == "discrete":
+        ret = price / price.shift(1) - 1
+    elif method == "compound" or method == "log":
+        ret = np.log(price).diff()
+        
+    return ret
+              
 def excess(R, Rf=0):
     """
     Calculates the returns of an asset in excess of the given "risk free rate"
@@ -26,15 +46,39 @@ def excess(R, Rf=0):
     """
     return R - Rf
 
+def centered(R):
+    """
+    Calculate the demeaned returns
+    """
+    return R - R.mean()
 
-def Geltner(R):
+def geltner(R):
     """
     Calculates returns by removing estimating or liquidity bias in
     real estate index returns. It has since been applied with success
     to other return series that show autocorrelation or illiquidity.
     """
-    pass
+    f_acf = R.apply(utils.acf).iloc[1].values
+    return (R - R.shift(1) * f_acf) / (1 - f_acf) 
 
+def relative(Ra, Rb):
+    """
+    Calculate the ratio of the cumulative performance for two assets 
+    through time.
+    """
+    try:
+        benchmark = "benchmark"
+        if Rb.name != None: #Rb is a time series
+            benchmark = Rb.name
+        else:
+            Rb.name = benchmark # Timeseries has to have a name in order for join to work
+        combined = Ra.join(Rb)
+    except AttributeError:
+        combined = Ra.join(Rb,rsuffix="bm")
+    
+    result = (combined.ix[:, :-1] + 1).cumprod() / (combined.ix[:, -1] + 1).cumprod()
+    result.columns = ["{}/{}".format(col, benchmark) for col in result.columns]
+    return result
 
 def rebalancing(R, weights):
     """
@@ -61,14 +105,3 @@ def rebalancing(R, weights):
     portfolio_return.index.name = 'Date'
     return portfolio_return
 
-
-def annualized(R, scale=None, geometric=True):
-    n = len(R)
-    result = 0
-    if scale is None:
-        scale = utils.periodicity(R).scale
-    if geometric:
-        result = math.pow((1 + R).prod(), scale / n) - 1
-    else:
-        result = R.mean() * scale
-    return result

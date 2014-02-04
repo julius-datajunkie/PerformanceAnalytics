@@ -80,3 +80,15 @@ def M4_MM(R, mu=None):
         row.shape = (cAssets, 1)
         M4 = M4 + np.kron(np.kron(np.outer(row, row.T), row.T), row.T)
     return 1.0/T * M4
+
+def acf(R):
+    """
+    Calcualte the auto correlation function of a series with lag 0 up to the length
+    of the series. 
+    """
+    y = R - R.mean()
+    result = np.correlate(y, y, mode="full")
+    result = result[len(result)//2:]
+    result /= result[0]
+    return result
+    
